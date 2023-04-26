@@ -1,0 +1,75 @@
+---
+title: "accident"
+author: "Ben Lehmann"
+date: "2023-04-19"
+output: html_document
+---
+
+https://github.com/BenLehmann12/Accident
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(tidyverse)
+library(ggplot2)
+library(maps)
+library(dplyr)
+acc <- read.csv("https://raw.githubusercontent.com/yumouqiu/DS202-Spring2023/main/Practice/data/fars2016/accident.csv", stringsAsFactors = FALSE)
+```
+
+
+```{r}
+acc %>% filter(LONGITUD<0) %>%ggplot(aes(x=LONGITUD,y=LATITUDE)) +geom_point()
+```
+
+```{r}
+week <- acc %>% group_by(DAY_WEEK) %>% summarise(n=n())
+```
+Sunday or (7) has the most with 6104
+
+```{r}
+time <- acc %>% group_by(HOUR) %>% summarise(n=n()) %>% arrange(desc(n))
+```
+
+Hour 18 or I believe 6 a.m has the most accidents
+
+```{r}
+dr <- acc %>% filter(DRUNK_DR >= 1)
+nrow(dr)
+```
+```{r}
+person <- read.csv("https://raw.githubusercontent.com/yumouqiu/DS202-Spring2023/main/Practice/data/fars2016/person.csv", stringsAsFactors = FALSE)
+
+sub <- person %>% filter(PER_TYP==1)
+
+acc1 <- acc %>% left_join(sub, by="ST_CASE")
+
+new_acc <- acc %>% left_join(sub, by=c("STATE" = "STATE", "ST_CASE" = "ST_CASE"))
+
+```
+
+
+I tested out different ways
+```{r}
+
+accidents <- new_acc %>%
+  group_by(DAY_WEEK, HOUR.x, SEX) %>%
+  summarise(n = n())
+
+accident_tally <- acc1 %>% 
+  group_by(DAY_WEEK, HOUR.x, SEX) %>% 
+  summarise(n_accidents = n())
+
+```
+```{r}
+ggplot(accident_tally, aes(x = DAY_WEEK, y = n_accidents, fill=HOUR.x)) +
+geom_col(position = "dodge")
+```
+```{r}
+ggplot(accident_tally, aes(x = DAY_WEEK, y = n_accidents, fill = HOUR.x)) +
+  geom_bar(stat = "identity", position = "dodge")+facet_wrap(~SEX, scales = "free_x") 
+```
+
